@@ -1,0 +1,54 @@
+{
+  "id": "/logstash",
+  "cmd": null,
+  "cpus": 2,
+  "mem": 2048,
+  "disk": 0,
+  "instances": 10,
+  "constraints": [
+    [
+      "hostname",
+      "UNIQUE"
+    ],
+    [
+      "bz",
+      "CLUSTER",
+      "proline"
+    ],
+    [
+      "env",
+      "CLUSTER",
+      "pro"
+    ]
+  ],
+  "container": {
+    "type": "DOCKER",
+    "volumes": [
+      {
+        "containerPath": "/home/logs/apps",
+        "hostPath": "/home/logs/apps",
+        "mode": "RO"
+      },
+      {
+        "containerPath": "/home/logs/nginx",
+        "hostPath": "/home/logs/nginx",
+        "mode": "RO"
+      }
+    ],
+    "docker": {
+      "image": "dockerhub.domain.com/logstash",
+      "network": "BRIDGE",
+      "portMappings": null,
+      "privileged": true,
+      "parameters": [],
+      "forcePullImage": false
+    }
+  },
+  "portDefinitions": [
+    {
+      "port": 1024,
+      "protocol": "tcp",
+      "labels": {}
+    }
+  ]
+}
