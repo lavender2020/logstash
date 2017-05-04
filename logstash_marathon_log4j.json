@@ -1,0 +1,53 @@
+{
+  "id": "/fund/prod/logstash",
+  "cmd": "logstash -e 'input { file {  type => \"hj-fund-route\"  path => \"/home/logs/foe-route/logstash/logstash.log\"  start_position => beginning     ignore_older => 1     codec => multiline { pattern => \"^\\[\"   negate => true  what => \"previous\"  }  }   file {     path => \"/home/logs/*/prod/*/nginx/access.log\"     type => prod_nginx_log     ignore_older => 1     codec => \"json\"   }  } filter {   if [type] == \"prod_log\" {     grok {       match => [\"message\",\"\\[%{TIMESTAMP_ISO8601:timestamp}\\]\\[%{USERNAME:appName}\\]\\[%{IP:node_ip}\\:%{NUMBER:node_port}\\]\\[(\\s)?%{LOGLEVEL:level}\\]\\[%{DATA:class}\\] %{GREEDYDATA:message}\"]       overwrite => [\"message\",\"timestamp\"]     }     date {       match => [\"timestamp\",\"yyyy-MM-dd HH:mm:ss,SSS\"]       remove_field => [\"timestamp\"]     }   } } output {   if [type] == \"prod_log\" {     kafka {       bootstrap_servers => \"10.10.50.86:9092,10.10.50.87:9092,10.10.50.88:9092\"       topic_id => \"lms\"     }   } else if [type] == \"prod_nginx_log\"{     kafka {       bootstrap_servers => \"10.10.50.57:9092\"       topic_id => \"nginx-json\"     }   } } '",
+  "cmd": "logstash -e 'input { file {  type => \"hj-fund-route\"  path => \"/home/logs/foe-route/logstash/logstash.log\"  codec => multiline { pattern => \"^(\\[DEBUG|\\[WARN|\\[ERROR|\\[INFO|\\[FATAL)\"  negate => true  what => previous } }  file {  type => \"hj-fund-route\"  path => \"/home/logs/foe-route/logstash/logstash.log\"  codec => multiline {  pattern => \"^(\\[DEBUG|\\[WARN|\\[ERROR|\\[INFO|\\[FATAL)\"  negate => true  what => previous } } }  filter {  if [type] =~ \"^hj-*\" {  grok {  match => [\"message\", \"(?m)\\[%{LOGLEVEL:level}\\] \\[%{TIMESTAMP_ISO8601:timestamp}\\] \\[%{DATA:logger}\\] \\[%{DATA:threadId}\\] \\[%{DATA:class}\\] \\[%{DATA:requestId}\\] \\[%{DATA:srv_ip}\\] %{GREEDYDATA:msgRawData}\"] }  date {  match => [\"timestamp\",\"yyyy-MM-dd HH:mm:ss,SSS\"] }  mutate {  remove_field => [ \"timestamp\", \"message\", \"path\", \"tags\" ] } } }  output {  if [type] =~ \"^hj-*\" {  kafka {  bootstrap_servers => \"10.10.50.86:9092,10.10.50.87:9092,10.10.50.88:9092\"  topic_id => \"log4j_access\"  }  } }'",
+  "cpus": 1,
+  "mem": 1024,
+  "disk": 0,
+  "instances": 2,
+  "constraints": [
+    [
+      "hostname",
+      "UNIQUE"
+    ],
+    [
+      "hostname",
+      "LIKE",
+      "10.20.70.51|10.20.70.50"
+    ],
+    [
+      "env",
+      "CLUSTER",
+      "pro"
+    ]
+  ],
+  "container": {
+    "type": "DOCKER",
+    "volumes": [
+      {
+        "containerPath": "/home/logs",
+        "hostPath": "/home/logs",
+        "mode": "RO"
+      }
+    ],
+    "docker": {
+      "image": "dockerhub.hjidc.com/logstash",
+      "network": "BRIDGE",
+      "portMappings": null,
+      "privileged": true,
+      "parameters": [],
+      "forcePullImage": false
+    }
+  },
+  "env": {
+    "TZ": "Asia/Shanghai"
+  },
+  "portDefinitions": [
+    {
+      "port": 10006,
+      "protocol": "tcp",
+      "labels": {}
+    }
+  ]
+}
