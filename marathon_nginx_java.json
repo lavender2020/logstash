@@ -1,0 +1,60 @@
+{
+  "id": "/lms/prod/igs/logstash",
+  "cmd": "logstash -f /etc/logstash/etc/logstash.conf",
+  "cpus": 2,
+  "mem": 2048,
+  "disk": 0,
+  "instances": 4,
+  "constraints": [
+    [
+      "hostname",
+      "UNIQUE"
+    ],
+    [
+      "bz",
+      "CLUSTER",
+      "igs"
+    ],
+    [
+      "env",
+      "CLUSTER",
+      "pro"
+    ]
+  ],
+  "container": {
+    "type": "DOCKER",
+    "volumes": [
+      {
+        "containerPath": "/home/logs",
+        "hostPath": "/home/logs",
+        "mode": "RO"
+      },
+      {
+        "containerPath": "/etc/logstash",
+        "hostPath": "/data/logstash",
+        "mode": "RW"
+      }
+    ],
+    "docker": {
+      "image": "dockerhub.yeshj.com/base/logstash_lms:2.3.4",
+      "network": "BRIDGE",
+      "portMappings": null,
+      "privileged": true,
+      "parameters": [],
+      "forcePullImage": false
+    }
+  },
+  "env": {
+    "TZ": "Asia/Shanghai"
+  },
+  "portDefinitions": [
+    {
+      "port": 10006,
+      "protocol": "tcp",
+      "labels": {}
+    }
+  ],
+  "uris": [
+    "file:///etc/docker.tar.gz"
+  ]
+}
